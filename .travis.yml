@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t tfazal/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run tfazal/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t tfazal/multi-client ./client  
+  - docker build -t tfazal/multi-nginx ./nginx  
+  - docker build -t tfazal/multi-server ./server  
+  - docker build -t tfazal/multi-worker ./worker
+  # Login to docker hub.
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push these images to docker hub.
+  - docker push tfazal/multi-client
+  - docker push tfazal/multi-nginx
+  - docker push tfazal/multi-server
+  - docker push tfazal/multi-worker
